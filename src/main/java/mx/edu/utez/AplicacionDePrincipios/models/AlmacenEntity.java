@@ -27,6 +27,9 @@ public class AlmacenEntity {
     @Enumerated(EnumType.STRING)
     private Tamano tamano;
 
+    @Enumerated(EnumType.STRING)
+    private Disponibilidad disponibilidad;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "cede_id")
     private CedeEntity cede;
@@ -42,10 +45,4 @@ public class AlmacenEntity {
         }
     }
 
-    @PostPersist
-    private void generarClave() {
-        if (clave == null && cede != null) {
-            this.clave = cede.getClave() + "-A" + id;
-        }
-    }
 }

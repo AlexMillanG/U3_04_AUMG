@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import mx.edu.utez.AplicacionDePrincipios.config.ApiResponse;
 import mx.edu.utez.AplicacionDePrincipios.models.ClienteEntity;
 import mx.edu.utez.AplicacionDePrincipios.models.ClienteRepository;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -27,16 +29,46 @@ public class ClienteService {
     }
 
     public ResponseEntity<ApiResponse> save(ClienteEntity cliente) {
-        if (cliente.getNombreCompleto() == null || cliente.getCorreoElectronico() == null)
+        if (cliente.getNombreCompleto() == null || cliente.getCorreoElectronico() == null ||
+                cliente.getNombreCompleto().trim().isEmpty() || cliente.getCorreoElectronico().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(new ApiResponse(null, "Nombre y correo son obligatorios", false));
+        }
+
+        if (cliente.getNumeroTelefono() == null || cliente.getNumeroTelefono().trim().isEmpty() || cliente.getNumeroTelefono().length() != 10) {
+            return ResponseEntity.badRequest().body(new ApiResponse(null, "Número de teléfono inválido (única longitud: 10 caracteres)", false));
+        }
+
+        // Limpieza
+        cliente.setNombreCompleto(Jsoup.clean(cliente.getNombreCompleto(), Safelist.none()));
+        cliente.setCorreoElectronico(Jsoup.clean(cliente.getCorreoElectronico(), Safelist.none()));
+        cliente.setNumeroTelefono(Jsoup.clean(cliente.getNumeroTelefono(), Safelist.none()));
+
         return ResponseEntity.ok(new ApiResponse(repository.save(cliente), "Cliente registrado correctamente", true));
     }
 
     public ResponseEntity<ApiResponse> update(Long id, ClienteEntity cliente) {
-        if (!repository.existsById(id))
-            return ResponseEntity.status(404).body(new ApiResponse(null, "Cliente no encontrado", false));
+        Optional<ClienteEntity> found = repository.findById(id);
+        if (found.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ApiResponse(null, "Cliente no encontrado", false));
+        }
+
+        if (cliente.getNombreCompleto() == null || cliente.getCorreoElectronico() == null ||
+                cliente.getNombreCompleto().trim().isEmpty() || cliente.getCorreoElectronico().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ApiResponse(null, "Nombre y correo son obligatorios", false));
+        }
+
+        if (cliente.getNumeroTelefono() == null || cliente.getNumeroTelefono().trim().isEmpty() || cliente.getNumeroTelefono().length() != 10) {
+            return ResponseEntity.badRequest().body(new ApiResponse(null, "Número de teléfono inválido (única longitud: 10 caracteres)", false));
+        }
+
+        // Limpieza
+        cliente.setNombreCompleto(Jsoup.clean(cliente.getNombreCompleto(), Safelist.none()));
+        cliente.setCorreoElectronico(Jsoup.clean(cliente.getCorreoElectronico(), Safelist.none()));
+        cliente.setNumeroTelefono(Jsoup.clean(cliente.getNumeroTelefono(), Safelist.none()));
+
         cliente.setId(id);
-        return ResponseEntity.ok(new ApiResponse(repository.save(cliente), "Cliente actualizado correctamente", true));
+        ClienteEntity updated = repository.save(cliente);
+        return ResponseEntity.ok(new ApiResponse(updated, "Cliente actualizado correctamente", true));
     }
 
     public ResponseEntity<ApiResponse> delete(Long id) {

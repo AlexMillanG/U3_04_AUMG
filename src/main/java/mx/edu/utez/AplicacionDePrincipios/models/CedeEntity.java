@@ -1,6 +1,7 @@
 package mx.edu.utez.AplicacionDePrincipios.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDate;
